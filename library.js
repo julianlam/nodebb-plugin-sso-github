@@ -9,6 +9,8 @@
 		passport = module.parent.require('passport'),
 		GithubStrategy = require('passport-github2').Strategy;
 
+	var winston = require('winston');
+
 	var authenticationController = module.parent.require('./controllers/authentication');
 
 	var constants = Object.freeze({
@@ -28,7 +30,8 @@
 					clientID: settings.id,
 					clientSecret: settings.secret,
 					callbackURL: nconf.get('url') + '/auth/github/callback',
-					passReqToCallback: true
+					passReqToCallback: true,
+					scope: [ 'user:email' ] // fetches non-public emails as well
 				}, function(req, token, tokenSecret, profile, done) {
 					if (req.hasOwnProperty('user') && req.user.hasOwnProperty('uid') && req.user.uid > 0) {
 						// Save GitHub -specific information to the user
@@ -90,7 +93,7 @@
 		if (!email) {
 			email = username + '@users.noreply.github.com';
 		}
-		
+
 		GitHub.getUidByGitHubID(githubID, function(err, uid) {
 			if (err) {
 				return callback(err);
@@ -104,6 +107,9 @@
 			} else {
 				// New User
 				var success = function(uid) {
+					// trust github's email
+					User.setUserField(uid, 'email:confirmed', 1);
+
 					User.setUserField(uid, 'githubid', githubID);
 					db.setObjectField('githubid:uid', githubID, uid);
 					callback(null, {

@@ -20,6 +20,11 @@ define('admin/plugins/sso-github', ['settings'], function(Settings) {
 				});
 			});
 		});
+
+		$("#restoreDefaultCallback").on("click", function ( )
+		{
+			$("#callback").val( $("#callback").attr( "defaultCallback" ) );
+		} );
 	};
 
 	return ACP;

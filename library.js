@@ -25,11 +25,11 @@
 
 	GitHub.getStrategy = function(strategies, callback) {
 		meta.settings.get('sso-github', function(err, settings) {
-			if (!err && settings.id && settings.secret) {
+			if (!err && settings.id && settings.secret && settings.callback ) {
 				passport.use(new GithubStrategy({
 					clientID: settings.id,
 					clientSecret: settings.secret,
-					callbackURL: nconf.get('url') + '/auth/github/callback',
+					callbackURL: settings.callback,
 					passReqToCallback: true,
 					scope: [ 'user:email' ] // fetches non-public emails as well
 				}, function(req, token, tokenSecret, profile, done) {
@@ -54,7 +54,7 @@
 				strategies.push({
 					name: 'github',
 					url: '/auth/github',
-					callbackURL: '/auth/github/callback',
+					callbackURL: settings.callback,
 					icon: constants.admin.icon,
 					scope: 'user:email'
 				});
@@ -157,9 +157,10 @@
 
 	GitHub.init = function(data, callback) {
 		function renderAdmin(req, res) {
-			res.render('admin/plugins/sso-github', {
-				callbackURL: nconf.get('url') + '/auth/github/callback'
-			});
+			res.render('admin/plugins/sso-github',
+				{
+					"defaultCallbackURL": nconf.get('url') + '/auth/github/callback',
+				} );
 		}
 
 		data.router.get('/admin/plugins/sso-github', data.middleware.admin.buildHeader, renderAdmin);

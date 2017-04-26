@@ -29,6 +29,11 @@
       "name": "Eric Miao",
       "email": "qjmiao@gmail.com",
       "url": "https://github.com/qjmiao/nodebb-plugin-sso-github"
+    },
+    {
+      "name": "Jiangcaiyang",
+      "email": "jiangcaiyang12345@126.com",
+      "url": "https://github.com/jiangcaiyang/nodebb-plugin-sso-github"
     }
   ],
   "license": "BSD-2-Clause",

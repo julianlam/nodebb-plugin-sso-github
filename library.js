@@ -1,17 +1,17 @@
 (function(module) {
 	"use strict";
 
-	var User = module.parent.require('./user'),
-		db = module.parent.require('./database'),
-		meta = module.parent.require('./meta'),
-		nconf = module.parent.require('nconf'),
-		async = module.parent.require('async'),
-		passport = module.parent.require('passport'),
-		GithubStrategy = require('passport-github2').Strategy;
+	var User = require.main.require('./src/user');
+	var db = require.main.require('./src/database');
+	var meta = require.main.require('./src/meta');
+	var nconf = require.main.require('nconf');
+	var async = require.main.require('async');
+	var passport = require.main.require('passport');
+	var GithubStrategy = require('passport-github2').Strategy;
 
 	var winston = module.parent.require('winston');
 
-	var authenticationController = module.parent.require('./controllers/authentication');
+	var authenticationController = require.main.require('./src/controllers/authentication');
 
 	var constants = Object.freeze({
 		'name': "GitHub",

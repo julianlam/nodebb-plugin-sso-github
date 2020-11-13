@@ -9,7 +9,7 @@
 	var passport = require.main.require('passport');
 	var GithubStrategy = require('passport-github2').Strategy;
 
-	var winston = module.main.require('winston');
+	var winston = require.main.require('winston');
 
 	var authenticationController = require.main.require('./src/controllers/authentication');
 

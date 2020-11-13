@@ -1,14 +1,15 @@
 # NodeBB GitHub SSO
 
-Used by [pnlpal](https://pnlpal.dev).
+NodeBB Plugin that allows users to login/register via their GitHub account.
 
-Fixed a few problems of the original sso-github:
+----
+Nov 13, 2020. Fixed a few problems:  
 
-1. fetch non-public github emails.
-2. fetch user's github avatar.
-3. add setting of trusting user's github email or not.
+    1. fetch non-public github emails.  
+    2. fetch user's github avatar.  
+    3. add setting of trusting user's github email or not.  
 
 ## Installation
 
-    npm install nodebb-plugin-sso-github2
+    npm install nodebb-plugin-sso-github
 

@@ -1,11 +1,11 @@
 {
-  "name": "nodebb-plugin-sso-github2",
+  "name": "nodebb-plugin-sso-github",
   "version": "2.2.3",
   "description": "NodeBB GitHub SSO",
   "main": "library.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/revir/nodebb-plugin-sso-github2"
+    "url": "https://github.com/julianlam/nodebb-plugin-sso-github"
   },
   "keywords": [
     "nodebb",
@@ -16,19 +16,29 @@
     "registration"
   ],
   "author": {
-    "name": "river",
-    "email": "revir.qing@gmail.com"
+    "name": "julianlam",
+    "email": "julian@nodebb.org"
   },
   "contributors": [
     {
       "name": "Julian Lam",
       "email": "julian@nodebb.org",
       "url": "https://github.com/julianlam/nodebb-plugin-sso-github"
+    },
+    {
+      "name": "Eric Miao",
+      "email": "qjmiao@gmail.com",
+      "url": "https://github.com/qjmiao/nodebb-plugin-sso-github"
+    },
+    {
+      "name": "River",
+      "email": "revir.qing@gmail.com",
+      "url": "https://github.com/revir/nodebb-plugin-sso-github2"
     }
   ],
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/revir/nodebb-plugin-sso-github2/issues"
+    "url": "https://github.com/julianlam/nodebb-plugin-sso-github/issues"
   },
   "readme": "",
   "readmeFilename": "README.md",

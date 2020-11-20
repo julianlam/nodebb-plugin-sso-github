@@ -9,7 +9,7 @@
 	var passport = require.main.require('passport');
 	var GithubStrategy = require('passport-github2').Strategy;
 
-	var winston = module.parent.require('winston');
+	var winston = require.main.require('winston');
 
 	var authenticationController = require.main.require('./src/controllers/authentication');
 
@@ -43,7 +43,8 @@
 					}
 
 					var email = Array.isArray(profile.emails) && profile.emails.length ? profile.emails[0].value : '';
-					GitHub.login(profile.id, profile.username, email, profile._json.avatar_url, function(err, user) {
+					var pictureUrl = Array.isArray(profile.photos) && profile.photos.length ? profile.photos[0].value : '';
+					GitHub.login(profile.id, profile.displayName, profile.username, email, pictureUrl, function(err, user) {
 						if (err) {
 							return done(err);
 						}
@@ -97,7 +98,7 @@
 		})
 	};
 
-	GitHub.login = function(githubID, username, email, avatar_url, callback) {
+	GitHub.login = function(githubID, displayName, username, email, pictureUrl, callback) {
 		if (!email) {
 			email = username + '@users.noreply.github.com';
 		}
@@ -115,19 +116,44 @@
 			} else {
 				// New User
 				var success = function(uid) {
-					// trust github's email
-					User.setUserField(uid, 'email:confirmed', 1);
-					db.sortedSetRemove('users:notvalidated', uid);
+					function checkEmail(next) {
+						if (GitHub.settings.needToVerifyEmail === 'on')
+							return next()
 
-					User.setUserField(uid, 'githubid', githubID);
+						async.series([
+							async.apply(User.setUserField, uid, 'email:confirmed', 1),
+					  		async.apply(db.delete, 'uid:' + uid + ':confirm:email:sent'),
+					  		async.apply(db.sortedSetRemove, 'users:notvalidated', uid)
+						], next)
+					}
 
-					// set profile picture
-					User.setUserField(uid, 'uploadedpicture', avatar_url);
-					User.setUserField(uid, 'picture', avatar_url);
+					function mergeUserData(next) {
+						async.waterfall([
+							async.apply(User.getUserFields, uid, ['picture', 'firstName', 'lastName', 'fullname']),
+							function(info, next) {
+								if (!info.picture && pictureUrl) { // set profile picture
+									User.setUserField(uid, 'uploadedpicture', pictureUrl);
+									User.setUserField(uid, 'picture', pictureUrl);
+								}
 
-					db.setObjectField('githubid:uid', githubID, uid);
-					callback(null, {
-						uid: uid
+								if (!info.fullname && displayName) {
+									User.setUserField(uid, 'fullname', displayName);
+								}
+								next();
+							}
+						], next);
+					}
+
+					// trust the email.
+					async.series([
+					  async.apply(User.setUserField, uid, 'githubid', githubID),
+					  async.apply(db.setObjectField, 'githubid:uid', githubID, uid),
+					  checkEmail,
+					  mergeUserData
+					], function (err) {
+					  callback(err, {
+					    uid: uid
+					  });
 					});
 				};
 

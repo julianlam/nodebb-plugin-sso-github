@@ -117,14 +117,10 @@
 				// New User
 				var success = function(uid) {
 					function checkEmail(next) {
-						if (GitHub.settings.needToVerifyEmail === 'on')
-							return next()
-
-						async.series([
-							async.apply(User.setUserField, uid, 'email:confirmed', 1),
-					  		async.apply(db.delete, 'uid:' + uid + ':confirm:email:sent'),
-					  		async.apply(db.sortedSetRemove, 'users:notvalidated', uid)
-						], next)
+						if (GitHub.settings.needToVerifyEmail === 'on') {
+							return next();
+						}
+						User.email.confirmByUid(uid, next);
 					}
 
 					function mergeUserData(next) {

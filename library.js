@@ -69,7 +69,7 @@
 
 	GitHub.appendUserHashWhitelist = function (data, callback) {
 		data.whitelist.push('githubid');
-		return setImmediate(callback, null, data);
+		setImmediate(callback, null, data);
 	};
 
 	GitHub.getAssociation = function(data, callback) {

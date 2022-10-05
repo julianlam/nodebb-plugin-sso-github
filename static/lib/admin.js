@@ -1,4 +1,4 @@
-define('admin/plugins/sso-github', ['settings'], function(Settings) {
+define('admin/plugins/sso-github', ['settings', 'alerts'], function(Settings, alerts) {
 	'use strict';
 	/* globals $, app, socket, require */
 
@@ -9,7 +9,7 @@ define('admin/plugins/sso-github', ['settings'], function(Settings) {
 
 		$('#save').on('click', function() {
 			Settings.save('sso-github', $('.sso-github-settings'), function() {
-				app.alert({
+				alerts.alert({
 					type: 'success',
 					alert_id: 'sso-github-saved',
 					title: 'Settings Saved',

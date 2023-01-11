@@ -59,6 +59,15 @@
 					url: '/auth/github',
 					callbackURL: '/auth/github/callback',
 					icon: constants.admin.icon,
+					icons: {
+						normal: 'fa-github',
+						square: 'fa-github-square',
+					},
+					labels: {
+						login: '[[social:sign-in-with-github]]',
+						register: '[[social:sign-up-with-github]]',
+					},
+					color: '#25292f',
 					scope: 'user:email'
 				});
 			}

@@ -60,8 +60,8 @@
 					callbackURL: '/auth/github/callback',
 					icon: constants.admin.icon,
 					icons: {
-						normal: 'fa-github',
-						square: 'fa-github-square',
+						normal: 'fa-brands fa-github',
+						square: 'fa-brands fa-github-square',
 					},
 					labels: {
 						login: '[[social:sign-in-with-github]]',

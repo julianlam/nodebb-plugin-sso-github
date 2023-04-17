@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-sso-github",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "NodeBB GitHub SSO",
   "main": "library.js",
   "repository": {

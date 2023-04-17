@@ -205,18 +205,15 @@
 	};
 
 	GitHub.init = function(data, callback) {
-		var hostHelpers = require.main.require('./src/routes/helpers');
+		const hostHelpers = require.main.require('./src/routes/helpers');
 
-		function renderAdmin(req, res) {
+		hostHelpers.setupAdminPageRoute(data.router, '/admin/plugins/sso-github', function (req, res) {
 			res.render('admin/plugins/sso-github', {
 				callbackURL: nconf.get('url') + '/auth/github/callback'
 			});
-		}
+		});
 
-		data.router.get('/admin/plugins/sso-github', data.middleware.admin.buildHeader, renderAdmin);
-		data.router.get('/api/admin/plugins/sso-github', renderAdmin);
-
-		hostHelpers.setupPageRoute(data.router, '/deauth/github', data.middleware, [data.middleware.requireUser], function (req, res) {
+		hostHelpers.setupPageRoute(data.router, '/deauth/github', [data.middleware.requireUser], function (req, res) {
 			res.render('plugins/sso-github/deauth', {
 				service: "GitHub",
 			});

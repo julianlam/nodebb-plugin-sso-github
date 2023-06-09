@@ -209,6 +209,7 @@
 
 		hostHelpers.setupAdminPageRoute(data.router, '/admin/plugins/sso-github', function (req, res) {
 			res.render('admin/plugins/sso-github', {
+				title: constants.name,
 				callbackURL: nconf.get('url') + '/auth/github/callback'
 			});
 		});

@@ -219,37 +219,23 @@
 				service: "GitHub",
 			});
 		});
-		data.router.post('/deauth/github', [data.middleware.requireUser, data.middleware.applyCSRF], function (req, res, next) {
-			GitHub.deleteUserData({
+		data.router.post('/deauth/github', [data.middleware.requireUser, data.middleware.applyCSRF], hostHelpers.tryRoute(async function (req, res) {
+			await GitHub.deleteUserData({
 				uid: req.user.uid,
-			}, function (err) {
-				if (err) {
-					return next(err);
-				}
-
-				res.redirect(nconf.get('relative_path') + '/me/edit');
 			});
-		});
+			res.redirect(nconf.get('relative_path') + '/me/edit');
+		}));
 
 		callback();
 	};
 
-	GitHub.deleteUserData = function(data, callback) {
-		var uid = data.uid;
-
-		async.waterfall([
-			async.apply(User.getUserField, uid, 'githubid'),
-			function(oAuthIdToDelete, next) {
-				db.deleteObjectField('githubid:uid', oAuthIdToDelete, next);
-			},
-			async.apply(db.deleteObjectField, 'user:' + uid, 'githubid'),
-		], function(err) {
-			if (err) {
-				winston.error('[sso-github] Could not remove OAuthId data for uid ' + uid + '. Error: ' + err);
-				return callback(err);
-			}
-			callback(null, uid);
-		});
+	GitHub.deleteUserData = async function(data) {
+		const { uid } = data;
+		const githubid = await User.getUserField(uid, 'githubid');
+		if (githubid) {
+			await db.deleteObjectField('githubid:uid', oAuthIdToDelete, next);
+			await db.deleteObjectField('user:' + uid, 'githubid');
+		}
 	};
 
 	module.exports = GitHub;

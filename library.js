@@ -233,7 +233,7 @@
 		const { uid } = data;
 		const githubid = await User.getUserField(uid, 'githubid');
 		if (githubid) {
-			await db.deleteObjectField('githubid:uid', githubid, next);
+			await db.deleteObjectField('githubid:uid', githubid);
 			await db.deleteObjectField('user:' + uid, 'githubid');
 		}
 	};

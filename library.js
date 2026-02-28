@@ -52,18 +52,27 @@ GitHub.getStrategy = async function (strategies) {
 			passReqToCallback: true,
 			scope: ['user:email'], // fetches non-public emails as well
 		}, async function (req, token, tokenSecret, profile, done) {
-			if (req.hasOwnProperty('user') && req.user.hasOwnProperty('uid') && req.user.uid > 0) {
-				// Save GitHub -specific information to the user
-				await User.setUserField(req.user.uid, 'githubid', profile.id);
-				await db.setObjectField('githubid:uid', profile.id, req.user.uid);
-				return done(null, req.user);
+			try {
+				if (req.hasOwnProperty('user') && req.user.hasOwnProperty('uid') && req.user.uid > 0) {
+					// Save GitHub -specific information to the user
+					await User.setUserField(req.user.uid, 'githubid', profile.id);
+					await db.setObjectField('githubid:uid', profile.id, req.user.uid);
+					return done(null, req.user);
+				}
+
+				const email = Array.isArray(profile.emails) && profile.emails.length ? profile.emails[0].value : '';
+				const pictureUrl = Array.isArray(profile.photos) && profile.photos.length ? profile.photos[0].value : '';
+				const { queued, uid, message } = await GitHub.login(
+					req, profile.id, profile.displayName, profile.username, email, pictureUrl
+				);
+				if (queued) {
+					return done(null, false, { message });
+				}
+
+				done(null, { uid });
+			} catch (err) {
+				done(err);
 			}
-
-			const email = Array.isArray(profile.emails) && profile.emails.length ? profile.emails[0].value : '';
-			const pictureUrl = Array.isArray(profile.photos) && profile.photos.length ? profile.photos[0].value : '';
-			const { uid } = await GitHub.login(profile.id, profile.displayName, profile.username, email, pictureUrl);
-
-			done(null, { uid });
 		}));
 
 		strategies.push({
@@ -112,7 +121,7 @@ GitHub.getAssociation = async function (data) {
 	return data;
 };
 
-GitHub.login = async function (githubID, displayName, username, email, pictureUrl) {
+GitHub.login = async function (req, githubID, displayName, username, email, pictureUrl) {
 	if (!email) {
 		email = username + '@users.noreply.github.com';
 	}
@@ -122,44 +131,75 @@ GitHub.login = async function (githubID, displayName, username, email, pictureUr
 		return { uid };
 	}
 
-	// New User
-	const success = async function (uid) {
-		async function checkEmail(next) {
-			if (GitHub.settings.needToVerifyEmail === 'on') {
-				return next();
-			}
-			await User.email.confirmByUid(uid, next);
-		}
-
-		async function mergeUserData() {
-			const info = await User.getUserFields(uid, ['picture', 'firstName', 'lastName', 'fullname']);
-			if (!info.picture && pictureUrl) { // set profile picture
-				await User.setUserFields(uid, {
-					uploadedpicture: pictureUrl,
-					picture: pictureUrl,
-				});
-			}
-			if (!info.fullname && displayName) {
-				await User.setUserField(uid, 'fullname', displayName);
-			}
-		}
-		await User.setUserField(uid, 'githubid', githubID);
-		await db.setObjectField('githubid:uid', githubID, uid);
-		await checkEmail();
-		await mergeUserData();
-	};
-
 	uid = await User.getUidByEmail(email);
-	if (!uid) {
-		// Abort user creation if registration via SSO is restricted
-		if (GitHub.settings.disableRegistration === 'on') {
-			throw new Error('[[error:sso-registration-disabled, GitHub]]');
-		}
-
-		uid = await User.create({username: username, email: email});
+	if (uid) { // Link github account to existing user with same email
+		await Promise.all([
+			User.setUserField(uid, 'githubid', githubID),
+			db.setObjectField('githubid:uid', githubID, uid),
+		]);
+		return { uid };
 	}
-	await success(uid);
-	return { uid };
+
+	// Abort user creation if registration via SSO is restricted
+	if (GitHub.settings.disableRegistration === 'on') {
+		throw new Error('[[error:sso-registration-disabled, GitHub]]');
+	}
+
+	return await User.createOrQueue(req, {
+		githubid: githubID,
+		username: username,
+		email: email,
+		fullname: displayName,
+		picture: pictureUrl,
+	}, {
+		emailVerification: GitHub.settings.needToVerifyEmail === 'on' ? 'send' : 'verify',
+	});
+};
+
+GitHub.addToApprovalQueue = async (hookData) => {
+	await saveGitHubSpecificData(hookData.data, hookData.userData);
+	return hookData;
+};
+
+GitHub.filterUserCreate = async (hookData) => {
+	await saveGitHubSpecificData(hookData.user, hookData.data);
+	return hookData;
+};
+
+async function saveGitHubSpecificData(targetObj, sourceObj) {
+	const { githubid, picture } = sourceObj;
+	if (githubid) {
+		const uid = await GitHub.getUidByGitHubID(githubid);
+		if (uid) {
+			throw new Error('[[error:sso-account-exists, GitHub]]');
+		}
+		targetObj.githubid = githubid;
+		if (picture) {
+			targetObj.picture = picture;
+			targetObj.uploadedpicture = picture;
+		}
+	}
+}
+
+GitHub.actionUserCreate = async (hookData) => {
+	const { uid } = hookData.user;
+	const githubid = await User.getUserField(uid, 'githubid');
+	if (githubid) {
+		await db.setObjectField('githubid:uid', githubid, uid);
+	}
+};
+
+GitHub.filterUserGetRegistrationQueue = async (hookData) => {
+	const { users } = hookData;
+	users.forEach((user) => {
+		if (user?.githubid) {
+			user.sso = {
+				icon: 'fa-brands fa-github',
+				name: constants.name,
+			};
+		}
+	});
+	return hookData;
 };
 
 GitHub.getUidByGitHubID = async function (githubID) {

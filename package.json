@@ -7,6 +7,9 @@
     "type": "git",
     "url": "https://github.com/julianlam/nodebb-plugin-sso-github"
   },
+  "scripts": {
+    "lint": "eslint ."
+  },
   "keywords": [
     "nodebb",
     "plugin",
@@ -44,6 +47,10 @@
   "readmeFilename": "README.md",
   "dependencies": {
     "passport-github2": "^0.1.9"
+  },
+  "devDependencies": {
+    "eslint": "10.0.2",
+    "eslint-config-nodebb": "^2.0.0"
   },
   "nbbpm": {
     "compatibility": "^4.0.0"
